@@ -1,0 +1,99 @@
+#load packages
+library(tidyverse) +
+library(knitr) +
+library(crayon) +
+library(tinytex) +
+library(ggplot2) +
+library(rmarkdown) +
+library(tibble) +
+library(readxl) +
+library(dplyr) +
+library(scales) +
+library(haven)
+
+ssd = read.csv("senate_seat_distribution_2022.csv")
+
+df = subset(ssd, grepl("_deluxe", expression))
+
+# Select only the desired columns
+prob = df[, c("seatsheld", "seatprob_Dparty")]
+
+use = prob[prob$seatsheld >= 40 & prob$seatsheld <= 60, ]
+
+#labels for axes
+cusy = c('0', '5', '10', '15%')
+cusx = c("60", "58", "56", "54","52", "50", "52", "54", "56", "58", "60")
+xcol = c("firebrick1", "firebrick1", "firebrick1", "firebrick1",
+          "firebrick1",  "gray", "cornflowerblue", "cornflowerblue",
+         "cornflowerblue", "cornflowerblue", "cornflowerblue")
+
+#graph
+ggplot(use, aes(x = seatsheld, y = seatprob_Dparty * 100, fill = factor(seatsheld >= 50))) +
+  geom_col(color = "white") +
+  geom_col() +
+  geom_hline(yintercept = c(5, 10, 15), linetype = "dotted", color = "gray") +
+  geom_hline(yintercept = c(0))+
+   labs(title = "How many Senate seats we expect each party to win",
+        subtitle = "Party seat count based on who wins the Senate in our Deluxe model's 40,000 simulations",
+       y = '',
+       x = '') + 
+  scale_fill_manual(values = c("firebrick1", "cornflowerblue"), guide = FALSE)+
+  scale_x_continuous(breaks = c(40, 42, 44, 46,48, 50, 52, 54, 56, 58, 60), 
+                     labels = cusx) +
+  scale_y_continuous(breaks = c(0, 5,10,15),
+                     labels = cusy)+
+  theme(panel.grid = element_blank(),  # Remove grid lines
+        panel.background = element_blank(),
+        plot.title = element_text(size = 14, hjust = 0.5),
+        plot.subtitle = element_text(size = 10, color = "gray", hjust = 0.5),
+        axis.text.x = element_text(color = xcol, vjust = 8),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank())
+  theme_minimal()
+  
+  
+  
+load('blue_jays.rda')
+
+
+
+##Manipulate data
+load('blue_jays.rda')
+
+BJD = blue_jays |>
+  count(Mass) |>
+  mutate(Head = n/sum(n))
+
+##Creating the Plot
+BJPlot = blue_jays |> 
+  ggplot(aes(x= Mass, y= Head, color = KnownSex, size = Skull, fill = KnownSex)) +
+  geom_point(shape = 21, alpha = 1) +  
+  labs(
+    x = 'bod mass (g)',
+    y = 'head length (mm)',
+  ) +
+  scale_y_continuous(
+    breaks =c(52,54,56,58,60) ##Breaks to represent actual values
+  )+
+  scale_color_manual(values = c("blue", "red")) + ##Blue is Male and Red is female.
+  scale_fill_manual(values = c("blue", "red")) + 
+  scale_size(range = c(1, 10)) +  
+  annotate(
+    "text", x = max(blue_jays$Mass), y = max(blue_jays$Head),
+    label = "Note: The plot shows the relationship between body mass and head length in Blue Jays.",
+    hjust = 0.5, vjust = 0.5, size = 2, color = "black"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  ##Title in Center
+    plot.background = element_rect(fill = "white"),  ##Set background color
+    panel.grid.major = element_line(color = "gray", linetype = "dashed"),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    axis.text = element_text(color = "black"),
+    axis.title = element_text(color = 'black'),
+    legend.position = "top"  # Move legend to top
+  ) +
+  guides(
+    size = guide_legend(title = "Skull Size")
+  )
